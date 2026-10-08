@@ -34,7 +34,6 @@
         <h3>▼ Мои Друзья</h3><ul id="l-friends" class="list"></ul><hr>
         <div id="chat-zone" class="hidden">
             <p id="c-title" style="text-align:center;font-weight:bold;color:#333;margin:4px 0">Чат не выбран</p>
-            <!-- При нажатии кнопка вызовет твою папку со вторым index.html -->
             <button id="btn-call" style="background:#28a745">Линия IMS VoIP Звонок</button>
             <div id="chat-area"></div>
             <div style="display:flex;gap:4px"><input type="text" id="inp-msg" placeholder="Сообщение..." style="margin:0;flex:1"><button id="btn-send" style="margin:0;width:auto">Отправить</button></div>
@@ -46,10 +45,11 @@
     firebase.initializeApp(cfg);const db=firebase.database();
     const \$=(id)=>document.getElementById(id);
     let myN="",toN="",chatRef=null;
+    
     function loadUsers(){
         \$('lbl-status').innerText="Загрузка списка...";
         db.ref('users').once('value').then(res=>{
-            \$('sel-nick').innerHTML=\$('l-friends').innerHTML="";let ok=false;
+            \$('sel-nick').innerHTML=""; \$('l-friends').innerHTML=""; let ok=false;
             res.forEach(u=>{ok=true;let n=u.key;
                 let o=document.createElement('option');o.value=o.innerText=n;\$('sel-nick').appendChild(o);
                 let li=document.createElement('li');li.innerText=n;li.onclick=()=>selFriend(n);\$('l-friends').appendChild(li);
@@ -58,19 +58,23 @@
         }).catch(()=>\$('lbl-status').innerText="Ошибка БД!");
     }
     loadUsers();
+    
     \$('btn-go-reg').onclick=()=>{\$('scr-auth').classList.add('hidden');\$('scr-reg').classList.remove('hidden')};
     \$('btn-back').onclick=()=>{\$('scr-reg').classList.add('hidden');\$('scr-auth').classList.remove('hidden');loadUsers()};
+    
     \$('btn-reg').onclick=()=>{
         let n=\$('inp-nick').value.trim();if(!n)return alert("Введите ник!");
         db.ref('users/'+n).set({t:firebase.database.ServerValue.TIMESTAMP}).then(()=>{
             alert("Ник создан!");\$('inp-nick').value="";\$('btn-back').click();
         }).catch(()=>alert("Ошибка Firebase Rules!"));
     };
+    
     \$('btn-login').onclick=()=>{
         if(!\$('sel-nick').value)return alert("Выберите ник!");
         myN=\$('sel-nick').value;\$('u-display').innerText=myN;
         \$('scr-auth').classList.add('hidden');\$('scr-main').classList.remove('hidden');
     };
+    
     function selFriend(n){
         if(n===myN)return alert("Нельзя выбрать себя!");toN=n;
         \$('c-title').innerText="Собеседник: "+n;\$('chat-zone').classList.remove('hidden');
@@ -87,6 +91,7 @@
             \$('chat-area').scrollTop = \$('chat-area').scrollHeight;
         });
     }
+    
     \$('btn-send').onclick=()=>{
         let txt=\$('inp-msg').value.trim();if(!txt||!toN)return;
         chatRef.push({sender:myN,text:txt,t:firebase.database.ServerValue.TIMESTAMP});
@@ -94,14 +99,9 @@
     };
     \$('inp-msg').onkeydown=(e)=>{if(e.key==='Enter')\$('btn-send').click()};
 
-    // НАСТРОЙКА КНОПКИ ЗВОНКА (Вызов второго index.html из папки)
     \$('btn-call').onclick=()=>{
         if(!toN) return;
-        // Здесь мы формируем путь до твоей папки со звонками.
-        // Замени 'calls/VoIP/' на точное имя твоей папки (например: 'chaos wipe/')
         let callPageUrl = `calls_voip/index.html?myNick=${encodeURIComponent(myN)}&toNick=${encodeURIComponent(toN)}`;
-        
-        // Открываем интерфейс связи в новой вкладке
         window.open(callPageUrl, '_blank');
     };
 </script>
