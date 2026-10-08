@@ -22,7 +22,6 @@
     <script src="https://gstatic.com"></script>
 </head>
 <body>
-
     <div class="card">
         <div style="text-align: center;">
             <div class="avatar-area">
@@ -37,11 +36,10 @@
             <button class="btn-action hang-btn" id="h-btn" onclick="endCall()">🛑</button>
         </div>
     </div>
-    
     <button class="back-btn" onclick="goBack()">← Назад в контакты</button>
-
     <script>
-        const holdMusic = new Audio("../MegaFon_-_Muzyka_ozhidaniya_otveta_operatora_polnaya_versiya_luchshe_kachestvo_(SkySound.cc).mp3");
+        // Музыка лежит в той же папке, поэтому пишем просто имя файла без всяких точек
+        const holdMusic = new Audio("MegaFon_-_Muzyka_ozhidaniya_otveta_operatora_polnaya_versiya_luchshe_kachestvo_(SkySound.cc).mp3");
         holdMusic.loop = true;
 
         firebase.initializeApp({
@@ -50,15 +48,12 @@
             projectId: "echat-c5df4"
         });
         const db = firebase.database();
-
         const myName = localStorage.getItem('weqip_myname') || "User";
         const target = localStorage.getItem('weqip_target') || "Никто";
-
         if(target !== "Никто") {
             document.getElementById('user-name').innerText = target;
             document.getElementById('avatar-letter').innerText = target.charAt(0);
         }
-
         function makeCall() {
             if(target === "Никто") return alert("Сначала выберите друга!");
             document.getElementById('c-btn').style.display = "none";
@@ -66,26 +61,19 @@
             document.getElementById('wave').style.display = "block";
             document.getElementById('call-status').innerText = "Ожидание ответа...";
             document.getElementById('call-status').style.color = "#00bfff";
-
-            holdMusic.play().catch(e => {
-                alert("Нажмите ок для старта гудков");
-                holdMusic.play();
-            });
+            holdMusic.play().catch(e => { alert("Нажмите ок для старта гудков"); holdMusic.play(); });
         }
-
         function endCall() {
             document.getElementById('c-btn').style.display = "flex";
             document.getElementById('h-btn').style.display = "none";
             document.getElementById('wave').style.display = "none";
             document.getElementById('call-status').innerText = "Звонок завершен";
             document.getElementById('call-status').style.color = "#00ff88";
-            holdMusic.pause();
-            holdMusic.currentTime = 0;
+            holdMusic.pause(); holdMusic.currentTime = 0;
         }
-
         function goBack() {
             holdMusic.pause();
-            window.location.href = '../index.html';
+            window.location.href = 'index.html'; // Возврат на главную
         }
     </script>
 </body>
