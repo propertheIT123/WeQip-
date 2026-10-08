@@ -2,95 +2,166 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeQip VoIP [Ara Style]</title>
+    <title>WeQip [IMS]</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        body { background: #0b0e14; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; gap: 15px; }
-        .card { width: 240px; height: 340px; background: #151a26; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 8px 32px rgba(0,255,136,0.1); border: 1px solid #222b3d; }
-        .avatar-area { position: relative; margin-top: 15px; }
-        .avatar { width: 80px; height: 80px; background: linear-gradient(45deg, #00ff88, #00bfff); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: bold; box-shadow: 0 0 20px rgba(0,255,85,0.4); }
-        .pulse { position: absolute; width: 80px; height: 80px; background: rgba(0,255,85,0.2); border-radius: 50%; animation: wave 1.8s infinite ease-in-out; top:0; left:0; z-index: -1; display: none; }
-        @keyframes wave { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
-        .name { font-size: 16px; font-weight: 600; margin-top: 15px; color: #e2e8f0; }
-        .status { font-size: 11px; color: #00ff88; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
-        .btn-action { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px; color: white; }
-        .call-btn { background: #00ff88; box-shadow: 0 4px 15px rgba(0,255,85,0.4); }
-        .hang-btn { background: #ff3b30; box-shadow: 0 4px 15px rgba(255,59,48,0.4); display: none; }
-        .back-btn { background: none; border: none; color: #7a96df; cursor: pointer; font-size: 12px; text-decoration: underline; }
+        * { box-sizing: border-box; font: 11px Tahoma, sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f0f0; display: flex; padding: 8px; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .win { width: 100%; max-width: 200px; height: 380px; background: #fff; border: 2px solid #7a96df; display: none; flex-direction: column; }
+        .hdr { background: linear-gradient(to right, #7a96df, #a0b8f0); color: #fff; padding: 4px; font-weight: bold; }
+        .list { flex: 1; overflow-y: auto; padding: 4px; }
+        .group { font-weight: bold; color: #4060a0; margin: 4px 0 2px 0; }
+        .item { display: flex; align-items: center; padding: 3px 4px; cursor: pointer; border-radius: 2px; }
+        .item:hover, .item.sel { background: #e0ecff; }
+        .ico { width: 9px; height: 9px; background: #9e9e9e; margin-right: 5px; border-radius: 1px; }
+        .ico.on { background: #4caf50; }
+        .ftr { background: #e0e8f8; border-top: 1px solid #999; padding: 4px; font-weight: bold; }
+        .chat { max-width: 280px; }
+        .hist { flex: 1; background: #fafafa; padding: 4px; overflow-y: auto; border-bottom: 1px solid #ccc; }
+        .input-box { height: 45px; display: flex; background: #fff; }
+        textarea { flex: 1; resize: none; border: none; outline: none; padding: 3px; }
+        button { padding: 2px 8px; cursor: pointer; background: #e0e8f8; border: 1px solid #7a96df; }
+        .login-screen { width: 240px; background: #fff; border: 2px solid #7a96df; display: flex; flex-direction: column; padding: 12px; gap: 8px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 50px; }
+        .login-screen input, .login-screen select { width: 100%; padding: 3px; border: 1px solid #7a96df; outline: none; }
+        .login-screen button { width: 100%; padding: 4px; margin-top: 5px; font-weight: bold; }
+        .toggle-lnk { text-align: center; color: #4060a0; cursor: pointer; text-decoration: underline; margin-top: 5px; }
     </style>
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 </head>
 <body>
-
-    <div class="card">
-        <div style="text-align: center;">
-            <div class="avatar-area">
-                <div class="pulse" id="wave"></div>
-                <div class="avatar" id="avatar-letter">?</div>
-            </div>
-            <div class="name" id="user-name">Линия свободна</div>
-            <div class="status" id="call-status">VoIP Ara</div>
+    <div class="login-screen" id="login-win">
+        <div class="hdr" id="login-hdr" style="margin: -12px -12px 5px -12px; padding: 5px;">WeQip: Авторизация</div>
+        <div id="auth-box">
+            <label>Выберите ваш ник:</label>
+            <select id="user-select"><option value="">Загрузка списка...</option></select>
+            <button onclick="doLogin()">Войти в IMS</button>
+            <div class="toggle-lnk" onclick="toggleAuth(true)">Регистрация нового ника</div>
         </div>
-        <div>
-            <button class="btn-action call-btn" id="c-btn" onclick="makeCall()">📞</button>
-            <button class="btn-action hang-btn" id="h-btn" onclick="endCall()">🛑</button>
+        <div id="reg-box" style="display:none;">
+            <label>Придумайте новый ник:</label>
+            <input type="text" id="new-name-input" placeholder="Например: Иван">
+            <button onclick="doRegister()">Создать аккаунт</button>
+            <div class="toggle-lnk" onclick="toggleAuth(false)">Вернуться ко входу</div>
         </div>
     </div>
-    
-    <!-- Кнопка вернуться назад в чат -->
-    <button class="back-btn" onclick="goBack()">← Назад в контакты</button>
-
+    <div class="win" id="contact-win">
+        <div class="hdr">WeQip Контакты</div>
+        <div class="list">
+            <div class="group">▼ Мои Друзья</div>
+            <div id="friends-list"></div>
+        </div>
+        <div class="ftr"><span id="my-name-txt">Вход...</span></div>
+    </div>
+    <div class="win chat" id="chat-win">
+        <div class="hdr" id="c-title">Чат не выбран</div>
+        <div style="background:#f0f4fc; padding:4px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Линия IMS</span>
+            <button onclick="openCallWindow()" style="background:#4caf50; color:#fff; font-size:10px; padding:1px 5px;">VoIP Звонок</button>
+        </div>
+        <div class="hist" id="hist">← Выберите друга из списка контактов.</div>
+        <div class="input-box">
+            <textarea id="msg-input" placeholder="Текст..." onkeydown="if(event.keyCode==13 && !event.shiftKey) { sendMsg(); event.preventDefault(); }"></textarea>
+            <button onclick="sendMsg()">ОК</button>
+        </div>
+    </div>
     <script>
-        // Подключаем твою музыку МегаФон из родительской папки
-        const holdMusic = new Audio("../MegaFon_-_Muzyka_ozhidaniya_otveta_operatora_polnaya_versiya_luchshe_kachestvo_(SkySound.cc).mp3");
-        holdMusic.loop = true;
-
+        const sndOhOh = new Audio("https://myinstants.com");
         firebase.initializeApp({
             apiKey: "AIzaSyCMLXrYsLsczy6v48UoTznjlmA0DL9Vshs",
             databaseURL: "https://firebaseio.com",
             projectId: "echat-c5df4"
         });
         const db = firebase.database();
-
-        const myName = localStorage.getItem('weqip_myname') || "User";
-        const target = localStorage.getItem('weqip_target') || "Никто";
-
-        if(target !== "Никто") {
-            document.getElementById('user-name').innerText = target;
-            document.getElementById('avatar-letter').innerText = target.charAt(0);
+        let myName = ""; let targetFriend = "";
+        db.ref('registered_users').on('value', (snapshot) => {
+            const usersObj = snapshot.val() || {};
+            if (Object.keys(usersObj).length === 0) {
+                db.ref('registered_users/Родион').set(true);
+                db.ref('registered_users/Антон').set(true);
+                return;
+            }
+            const select = document.getElementById('user-select');
+            select.innerHTML = "";
+            Object.keys(usersObj).forEach(user => {
+                select.innerHTML += `<option value="${user}">${user}</option>`;
+            });
+        });
+        function toggleAuth(isReg) {
+            document.getElementById('auth-box').style.display = isReg ? 'none' : 'block';
+            document.getElementById('reg-box').style.display = isReg ? 'block' : 'none';
         }
-
-        function makeCall() {
-            if(target === "Никто") return alert("Сначала выберите друга!");
-            document.getElementById('c-btn').style.display = "none";
-            document.getElementById('h-btn').style.display = "flex";
-            document.getElementById('wave').style.display = "block";
-            document.getElementById('call-status').innerText = "Ожидание ответа...";
-            document.getElementById('call-status').style.color = "#00bfff";
-
-            holdMusic.play().catch(e => {
-                alert("Нажмите ок для старта гудков");
-                holdMusic.play();
+        function doRegister() {
+            const newName = document.getElementById('new-name-input').value.trim();
+            if(!newName) return alert("Введите имя!");
+            db.ref('registered_users/' + newName).set(true, (err) => {
+                if(!err) {
+                    alert("Успешно! Теперь выберите ник в списке.");
+                    document.getElementById('new-name-input').value = "";
+                    toggleAuth(false);
+                }
             });
         }
-
-        function endCall() {
-            document.getElementById('c-btn').style.display = "flex";
-            document.getElementById('h-btn').style.display = "none";
-            document.getElementById('wave').style.display = "none";
-            document.getElementById('call-status').innerText = "Звонок завершен";
-            document.getElementById('call-status').style.color = "#00ff88";
-            holdMusic.pause();
-            holdMusic.currentTime = 0;
+        function doLogin() {
+            myName = document.getElementById('user-select').value;
+            if(!myName) return alert("Выберите пользователя!");
+            localStorage.setItem('weqip_myname', myName);
+            document.getElementById('my-name-txt').innerText = "Вы: " + myName;
+            document.getElementById('login-win').style.display = 'none';
+            document.getElementById('contact-win').style.display = 'flex';
+            document.getElementById('chat-win').style.display = 'flex';
+            startAppLogic();
         }
-
-        function goBack() {
-            holdMusic.pause();
-            // Возвращаемся обратно на главную страницу чата
-            window.location.href = '../index.html';
+        function startAppLogic() {
+            db.ref('status/' + myName).set("online");
+            db.ref('status/' + myName).onDisconnect().set("offline");
+            db.ref('status').on('value', (snapshot) => {
+                const statuses = snapshot.val() || {};
+                const container = document.getElementById('friends-list');
+                container.innerHTML = "";
+                db.ref('registered_users').once('value', (regSnapshot) => {
+                    Object.keys(regSnapshot.val() || {}).forEach(user => {
+                        if (user !== myName) {
+                            const isOn = statuses[user] === "online";
+                            container.innerHTML += `<div class="item ${user===targetFriend?'sel':''}" onclick="switchChat('${user}')"><span class="ico ${isOn?'on':''}"></span><span>${user} ${isOn?'(В сети)':'(Оффлайн)'}</span></div>`;
+                        }
+                    });
+                });
+            });
+        }
+        function switchChat(friend) {
+            targetFriend = friend;
+            localStorage.setItem('weqip_target', friend);
+            document.getElementById('c-title').innerText = "Чат с: " + friend;
+            listenMessages();
+        }
+        function sendMsg() {
+            const txt = document.getElementById('msg-input').value.trim();
+            if (!targetFriend || !txt) return;
+            const roomID = myName < targetFriend ? `${myName}_${targetFriend}` : `${targetFriend}_${myName}`;
+            db.ref('private_chats/' + roomID).push({ sender: myName, text: txt, time: Date.now() });
+            document.getElementById('msg-input').value = "";
+        }
+        let firstLoad = true;
+        function listenMessages() {
+            const roomID = myName < targetFriend ? `${myName}_${targetFriend}` : `${targetFriend}_${myName}`;
+            db.ref('private_chats/' + roomID).off();
+            db.ref('private_chats/' + roomID).limitToLast(20).on('value', (snapshot) => {
+                const hist = document.getElementById('hist');
+                hist.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const m = child.val();
+                    hist.innerHTML += `<div><b>${m.sender}:</b> ${m.text}</div>`;
+                });
+                hist.scrollTop = hist.scrollHeight;
+                if (!firstLoad) sndOhOh.play().catch(()=>{});
+                firstLoad = false;
+            });
+        }
+        function openCallWindow() {
+            if(!targetFriend) return alert("Выберите друга для звонка!");
+            // Переходим на новый файл звонилки БЕЗ всяких скрытых папок!
+            window.location.href = 'call.html';
         }
     </script>
 </body>
 </html>
-
