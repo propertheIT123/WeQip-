@@ -3,165 +3,186 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeQip [IMS]</title>
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <script src="https://unpkg.com"></script>
     <style>
-        * { box-sizing: border-box; font: 11px Tahoma, sans-serif; margin: 0; padding: 0; }
-        body { background: #f0f0f0; display: flex; padding: 8px; gap: 8px; flex-wrap: wrap; justify-content: center; }
-        .win { width: 100%; max-width: 200px; height: 380px; background: #fff; border: 2px solid #7a96df; display: none; flex-direction: column; }
-        .hdr { background: linear-gradient(to right, #7a96df, #a0b8f0); color: #fff; padding: 4px; font-weight: bold; }
-        .list { flex: 1; overflow-y: auto; padding: 4px; }
-        .group { font-weight: bold; color: #4060a0; margin: 4px 0 2px 0; }
-        .item { display: flex; align-items: center; padding: 3px 4px; cursor: pointer; border-radius: 2px; }
-        .item:hover, .item.sel { background: #e0ecff; }
-        .ico { width: 9px; height: 9px; background: #9e9e9e; margin-right: 5px; border-radius: 1px; }
-        .ico.on { background: #4caf50; }
-        .ftr { background: #e0e8f8; border-top: 1px solid #999; padding: 4px; font-weight: bold; }
-        .chat { max-width: 280px; }
-        .hist { flex: 1; background: #fafafa; padding: 4px; overflow-y: auto; border-bottom: 1px solid #ccc; }
-        .input-box { height: 45px; display: flex; background: #fff; }
-        textarea { flex: 1; resize: none; border: none; outline: none; padding: 3px; }
-        button { padding: 2px 8px; cursor: pointer; background: #e0e8f8; border: 1px solid #7a96df; }
-        .login-screen { width: 240px; background: #fff; border: 2px solid #7a96df; display: flex; flex-direction: column; padding: 12px; gap: 8px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); margin-top: 50px; }
-        .login-screen input, .login-screen select { width: 100%; padding: 3px; border: 1px solid #7a96df; outline: none; }
-        .login-screen button { width: 100%; padding: 4px; margin-top: 5px; font-weight: bold; }
-        .toggle-lnk { text-align: center; color: #4060a0; cursor: pointer; text-decoration: underline; margin-top: 5px; }
+        body{font-family:Arial;background:#f0f2f5;padding:20px;display:flex;justify-content:center}
+        .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);width:100%;max-width:400px}
+        .hidden{display:none} input,button,select{width:100%;padding:10px;margin:8px 0;box-sizing:border-box;border-radius:4px;border:1px solid #ccc}
+        button{background:#007bff;color:#fff;border:none;font-weight:bold;cursor:pointer}
+        .list{list-style:none;padding:0} .list li{padding:10px;background:#f8f9fa;margin-bottom:5px;border-radius:4px;cursor:pointer;border-left:4px solid #007bff}
     </style>
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
 </head>
 <body>
-    <div class="login-screen" id="login-win">
-        <div class="hdr" id="login-hdr" style="margin: -12px -12px 5px -12px; padding: 5px;">WeQip: Авторизация</div>
-        <div id="auth-box">
-            <label>Выберите ваш ник:</label>
-            <select id="user-select"><option value="">Загрузка списка...</option></select>
-            <button onclick="doLogin()">Войти в IMS</button>
-            <div class="toggle-lnk" onclick="toggleAuth(true)">Регистрация нового ника</div>
-        </div>
-        <div id="reg-box" style="display:none;">
-            <label>Придумайте новый ник:</label>
-            <input type="text" id="new-name-input" placeholder="Например: Иван">
-            <button onclick="doRegister()">Создать аккаунт</button>
-            <div class="toggle-lnk" onclick="toggleAuth(false)">Вернуться ко входу</div>
-        </div>
+<div class="box">
+    <h2>WeQip [IMS]</h2>
+    <div id="scr-auth">
+        <p id="lbl-status" style="text-align:center;color:gray;font-style:italic">Загрузка списка...</p>
+        <label>Выберите ник:</label><select id="sel-nick"></select>
+        <button id="btn-login">Войти в IMS</button><hr>
+        <button id="btn-go-reg" style="background:#28a745">Регистрация нового ника</button>
     </div>
-    <div class="win" id="contact-win">
-        <div class="hdr">WeQip Контакты</div>
-        <div class="list">
-            <div class="group">▼ Мои Друзья</div>
-            <div id="friends-list"></div>
-        </div>
-        <div class="ftr"><span id="my-name-txt">Вход...</span></div>
+    <div id="scr-reg" class="hidden">
+        <label>Придумайте новый ник:</label><input type="text" id="inp-nick" placeholder="Никнейм...">
+        <button id="btn-reg">Создать аккаунт</button>
+        <button id="btn-back" style="background:#6c757d">Назад</button>
     </div>
-    <div class="win chat" id="chat-win">
-        <div class="hdr" id="c-title">Чат не выбран</div>
-        <div style="background:#f0f4fc; padding:4px; display:flex; justify-content:space-between; align-items:center;">
-            <span>Линия IMS</span>
-            <button onclick="openCallWindow()" style="background:#4caf50; color:#fff; font-size:10px; padding:1px 5px;">VoIP Звонок</button>
-        </div>
-        <div class="hist" id="hist">← Выберите друга из списка контактов.</div>
-        <div class="input-box">
-            <textarea id="msg-input" placeholder="Текст..." onkeydown="if(event.keyCode==13 && !event.shiftKey) { sendMsg(); event.preventDefault(); }"></textarea>
-            <button onclick="sendMsg()">ОК</button>
-        </div>
+    <div id="scr-main" class="hidden">
+        <p>Вы вошли как: <strong id="u-display"></strong></p>
+        <h3>▼ Мои Друзья</h3><ul id="l-friends" class="list"><li style="color:gray">Загрузка...</li></ul><hr>
+        <p id="c-title" style="text-align:center;color:gray">Чат не выбран</p>
+        <p id="v-status" style="text-align:center;font-weight:bold;color:#28a745"></p>
+        <button id="btn-call" style="background:#28a745" disabled>Линия IMS VoIP Звонок</button>
+        <button id="btn-end" style="background:#dc3545" class="hidden">Положить трубку</button>
     </div>
-    <script>
-        const sndOhOh = new Audio("https://myinstants.com");
-        firebase.initializeApp({
-            apiKey: "AIzaSyCMLXrYsLsczy6v48UoTznjlmA0DL9Vshs",
-            databaseURL: "https://firebaseio.com",
-            projectId: "echat-c5df4"
-        });
-        const db = firebase.database();
-        let myName = ""; let targetFriend = "";
-        db.ref('registered_users').on('value', (snapshot) => {
-            const usersObj = snapshot.val() || {};
-            if (Object.keys(usersObj).length === 0) {
-                db.ref('registered_users/Родион').set(true);
-                db.ref('registered_users/Антон').set(true);
-                return;
-            }
-            const select = document.getElementById('user-select');
-            select.innerHTML = "";
-            Object.keys(usersObj).forEach(user => {
-                select.innerHTML += `<option value="${user}">${user}</option>`;
+</div>
+<audio id="audio" autoplay></audio>
+<script>
+    const cfg={apiKey:"AIzaSyCMLXrYsLsczy6v48UoTznjlmA0DL9Vshs",authDomain:"://firebaseapp.com",databaseURL:"https://firebaseio.com",projectId:"echat-c5df4",storageBucket:"echat-c5df4.firebasestorage.app",messagingSenderId:"197446204847"};
+    firebase.initializeApp(cfg);const db=firebase.database();
+    const $=(id)=>document.getElementById(id);
+    let myN="",toN="",peer=null,lStream=null,currCall=null;
+    function loadUsers(){
+        $('lbl-status').innerText="Загрузка списка...";
+        db.ref('users').once('value').then(res=>{
+            $('sel-nick').innerHTML=$('l-friends').innerHTML="";let ok=false;
+            res.forEach(u=>{ok=true;let n=u.key;
+                let o=document.createElement('option');o.value=o.innerText=n;$('sel-nick').appendChild(o);
+                let li=document.createElement('li');li.innerText=n;li.onclick=()=>selFriend(n);$('l-friends').appendChild(li);
             });
-        });
-        function toggleAuth(isReg) {
-            document.getElementById('auth-box').style.display = isReg ? 'none' : 'block';
-            document.getElementById('reg-box').style.display = isReg ? 'block' : 'none';
-        }
-        function doRegister() {
-            const newName = document.getElementById('new-name-input').value.trim();
-            if(!newName) return alert("Введите имя!");
-            db.ref('registered_users/' + newName).set(true, (err) => {
-                if(!err) {
-                    alert("Успешно! Теперь выберите ник в списке.");
-                    document.getElementById('new-name-input').value = "";
-                    toggleAuth(false);
-                }
-            });
-        }
-        function doLogin() {
-            myName = document.getElementById('user-select').value;
-            if(!myName) return alert("Выберите пользователя!");
-            localStorage.setItem('weqip_myname', myName);
-            document.getElementById('my-name-txt').innerText = "Вы: " + myName;
-            document.getElementById('login-win').style.display = 'none';
-            document.getElementById('contact-win').style.display = 'flex';
-            document.getElementById('chat-win').style.display = 'flex';
-            startAppLogic();
-        }
-        function startAppLogic() {
-            db.ref('status/' + myName).set("online");
-            db.ref('status/' + myName).onDisconnect().set("offline");
-            db.ref('status').on('value', (snapshot) => {
-                const statuses = snapshot.val() || {};
-                const container = document.getElementById('friends-list');
-                container.innerHTML = "";
-                db.ref('registered_users').once('value', (regSnapshot) => {
-                    Object.keys(regSnapshot.val() || {}).forEach(user => {
-                        if (user !== myName) {
-                            const isOn = statuses[user] === "online";
-                            container.innerHTML += `<div class="item ${user===targetFriend?'sel':''}" onclick="switchChat('${user}')"><span class="ico ${isOn?'on':''}"></span><span>${user} ${isOn?'(В сети)':'(Оффлайн)'}</span></div>`;
-                        }
-                    });
+            $('lbl-status').innerText=ok?"Вход...":"Пользователей нет!";
+        }).catch(()=>$('lbl-status').innerText="Ошибка базы данных!");
+    }
+    loadUsers();
+    $('btn-go-reg').onclick=()=>{$('scr-auth').classList.add('hidden');$('scr-reg').classList.remove('hidden')};
+    $('btn-back').onclick=()=>{$('scr-reg').classList.add('hidden');$('scr-auth').classList.remove('hidden');loadUsers()};
+    $('btn-reg').onclick=()=>{
+        let n=$('inp-nick').value.trim();if(!n)return alert("Введите ник!");
+        db.ref('users/'+n).set({t:firebase.database.ServerValue.TIMESTAMP}).then(()=>{
+            alert("Ник зарегистрирован!");$('inp-nick').value="";$('btn-back').click();
+        }).catch(()=>alert("Ошибка! Проверьте Rules в Firebase."));
+    };
+    $('btn-login').onclick=()=>{
+        if(!$('sel-nick').value)return alert("Выберите ник!");
+        myN=$('sel-nick').value;$('u-display').innerText=myN;
+        $('scr-auth').classList.add('hidden');$('scr-main').classList.remove('hidden');
+        peer=new Peer(myN,{host:'://peerjs.com',port:443,secure:true});
+        peer.on('call',c=>{currCall=c;
+            if(confirm("Звонок от "+c.peer+". Ответить?")){
+                navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+                    lStream=s;c.answer(s);$('v-status').innerText="Разговор с "+c.peer;
+                    $('btn-call').classList.add('hidden');$('btn-end').classList.remove('hidden');
+                    c.on('stream',rs=>{$('audio').srcObject=rs});
                 });
+            }else c.close();
+            c.on('close',end);
+        });
+    };
+    function selFriend(n){if(n===myN)return alert("Нельзя звонить себе!");toN=n;$('c-title').innerText="Собеседник: "+n;$('btn-call').removeAttribute('disabled');$('btn-call').innerText="Линия IMS VoIP Звонок ("+n+")"}
+    $('btn-call').onclick=()=>{if(!toN)return;$('v-status').innerText="Вызов "+toN+"...";
+        navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+            lStream=s;currCall=peer.call(toN,s);$('btn-call').classList.add('hidden');$('btn-end').classList.remove('hidden');
+            currCall.on('stream',rs=>{$('v-status').innerText="В эфире с "+toN;$('audio').srcObject=rs});
+            currCall.on('close',end);
+        }).catch(()=>alert("Нужен микрофон и HTTPS!"));
+    };
+    $('btn-end').onclick=()=>{if(currCall)currCall.close();end()};
+    function end(){$('v-status').innerText="Завершен";$('btn-end').classList.add('hidden');$('btn-call').classList.remove('hidden');if(lStream)lStream.getTracks().forEach(t=>t.stop());$('audio').srcObject=null}
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeQip [IMS]</title>
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <script src="https://unpkg.com"></script>
+    <style>
+        body{font-family:Arial;background:#f0f2f5;padding:20px;display:flex;justify-content:center}
+        .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);width:100%;max-width:400px}
+        .hidden{display:none} input,button,select{width:100%;padding:10px;margin:8px 0;box-sizing:border-box;border-radius:4px;border:1px solid #ccc}
+        button{background:#007bff;color:#fff;border:none;font-weight:bold;cursor:pointer}
+        .list{list-style:none;padding:0} .list li{padding:10px;background:#f8f9fa;margin-bottom:5px;border-radius:4px;cursor:pointer;border-left:4px solid #007bff}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>WeQip [IMS]</h2>
+    <div id="scr-auth">
+        <p id="lbl-status" style="text-align:center;color:gray;font-style:italic">Загрузка списка...</p>
+        <label>Выберите ник:</label><select id="sel-nick"></select>
+        <button id="btn-login">Войти в IMS</button><hr>
+        <button id="btn-go-reg" style="background:#28a745">Регистрация нового ника</button>
+    </div>
+    <div id="scr-reg" class="hidden">
+        <label>Придумайте новый ник:</label><input type="text" id="inp-nick" placeholder="Никнейм...">
+        <button id="btn-reg">Создать аккаунт</button>
+        <button id="btn-back" style="background:#6c757d">Назад</button>
+    </div>
+    <div id="scr-main" class="hidden">
+        <p>Вы вошли как: <strong id="u-display"></strong></p>
+        <h3>▼ Мои Друзья</h3><ul id="l-friends" class="list"><li style="color:gray">Загрузка...</li></ul><hr>
+        <p id="c-title" style="text-align:center;color:gray">Чат не выбран</p>
+        <p id="v-status" style="text-align:center;font-weight:bold;color:#28a745"></p>
+        <button id="btn-call" style="background:#28a745" disabled>Линия IMS VoIP Звонок</button>
+        <button id="btn-end" style="background:#dc3545" class="hidden">Положить трубку</button>
+    </div>
+</div>
+<audio id="audio" autoplay></audio>
+<script>
+    const cfg={apiKey:"AIzaSyCMLXrYsLsczy6v48UoTznjlmA0DL9Vshs",authDomain:"://firebaseapp.com",databaseURL:"https://firebaseio.com",projectId:"echat-c5df4",storageBucket:"echat-c5df4.firebasestorage.app",messagingSenderId:"197446204847"};
+    firebase.initializeApp(cfg);const db=firebase.database();
+    const $=(id)=>document.getElementById(id);
+    let myN="",toN="",peer=null,lStream=null,currCall=null;
+    function loadUsers(){
+        $('lbl-status').innerText="Загрузка списка...";
+        db.ref('users').once('value').then(res=>{
+            $('sel-nick').innerHTML=$('l-friends').innerHTML="";let ok=false;
+            res.forEach(u=>{ok=true;let n=u.key;
+                let o=document.createElement('option');o.value=o.innerText=n;$('sel-nick').appendChild(o);
+                let li=document.createElement('li');li.innerText=n;li.onclick=()=>selFriend(n);$('l-friends').appendChild(li);
             });
-        }
-        function switchChat(friend) {
-            targetFriend = friend;
-            localStorage.setItem('weqip_target', friend);
-            document.getElementById('c-title').innerText = "Чат с: " + friend;
-            listenMessages();
-        }
-        function sendMsg() {
-            const txt = document.getElementById('msg-input').value.trim();
-            if (!targetFriend || !txt) return;
-            const roomID = myName < targetFriend ? `${myName}_${targetFriend}` : `${targetFriend}_${myName}`;
-            db.ref('private_chats/' + roomID).push({ sender: myName, text: txt, time: Date.now() });
-            document.getElementById('msg-input').value = "";
-        }
-        let firstLoad = true;
-        function listenMessages() {
-            const roomID = myName < targetFriend ? `${myName}_${targetFriend}` : `${targetFriend}_${myName}`;
-            db.ref('private_chats/' + roomID).off();
-            db.ref('private_chats/' + roomID).limitToLast(20).on('value', (snapshot) => {
-                const hist = document.getElementById('hist');
-                hist.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const m = child.val();
-                    hist.innerHTML += `<div><b>${m.sender}:</b> ${m.text}</div>`;
+            $('lbl-status').innerText=ok?"Вход...":"Пользователей нет!";
+        }).catch(()=>$('lbl-status').innerText="Ошибка базы данных!");
+    }
+    loadUsers();
+    $('btn-go-reg').onclick=()=>{$('scr-auth').classList.add('hidden');$('scr-reg').classList.remove('hidden')};
+    $('btn-back').onclick=()=>{$('scr-reg').classList.add('hidden');$('scr-auth').classList.remove('hidden');loadUsers()};
+    $('btn-reg').onclick=()=>{
+        let n=$('inp-nick').value.trim();if(!n)return alert("Введите ник!");
+        db.ref('users/'+n).set({t:firebase.database.ServerValue.TIMESTAMP}).then(()=>{
+            alert("Ник зарегистрирован!");$('inp-nick').value="";$('btn-back').click();
+        }).catch(()=>alert("Ошибка! Проверьте Rules в Firebase."));
+    };
+    $('btn-login').onclick=()=>{
+        if(!$('sel-nick').value)return alert("Выберите ник!");
+        myN=$('sel-nick').value;$('u-display').innerText=myN;
+        $('scr-auth').classList.add('hidden');$('scr-main').classList.remove('hidden');
+        peer=new Peer(myN,{host:'://peerjs.com',port:443,secure:true});
+        peer.on('call',c=>{currCall=c;
+            if(confirm("Звонок от "+c.peer+". Ответить?")){
+                navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+                    lStream=s;c.answer(s);$('v-status').innerText="Разговор с "+c.peer;
+                    $('btn-call').classList.add('hidden');$('btn-end').classList.remove('hidden');
+                    c.on('stream',rs=>{$('audio').srcObject=rs});
                 });
-                hist.scrollTop = hist.scrollHeight;
-                if (!firstLoad) sndOhOh.play().catch(()=>{});
-                firstLoad = false;
-            });
-        }
-        function openCallWindow() {
-            if(!targetFriend) return alert("Выберите друга для звонка!");
-            // Переходим на новый файл звонилки БЕЗ всяких скрытых папок!
-            window.location.href = 'call.html';
-        }
-    </script>
+            }else c.close();
+            c.on('close',end);
+        });
+    };
+    function selFriend(n){if(n===myN)return alert("Нельзя звонить себе!");toN=n;$('c-title').innerText="Собеседник: "+n;$('btn-call').removeAttribute('disabled');$('btn-call').innerText="Линия IMS VoIP Звонок ("+n+")"}
+    $('btn-call').onclick=()=>{if(!toN)return;$('v-status').innerText="Вызов "+toN+"...";
+        navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+            lStream=s;currCall=peer.call(toN,s);$('btn-call').classList.add('hidden');$('btn-end').classList.remove('hidden');
+            currCall.on('stream',rs=>{$('v-status').innerText="В эфире с "+toN;$('audio').srcObject=rs});
+            currCall.on('close',end);
+        }).catch(()=>alert("Нужен микрофон и HTTPS!"));
+    };
+    $('btn-end').onclick=()=>{if(currCall)currCall.close();end()};
+    function end(){$('v-status').innerText="Завершен";$('btn-end').classList.add('hidden');$('btn-call').classList.remove('hidden');if(lStream)lStream.getTracks().forEach(t=>t.stop());$('audio').srcObject=null}
+</script>
 </body>
 </html>
