@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeQip VoIP [Ara Style]</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: #0b0e14; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; gap: 15px; }
+        .card { width: 240px; height: 340px; background: #151a26; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 8px 32px rgba(0,255,136,0.1); border: 1px solid #222b3d; }
+        .avatar-area { position: relative; margin-top: 15px; }
+        .avatar { width: 80px; height: 80px; background: linear-gradient(45deg, #00ff88, #00bfff); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: bold; box-shadow: 0 0 20px rgba(0,255,85,0.4); }
+        .pulse { position: absolute; width: 80px; height: 80px; background: rgba(0,255,85,0.2); border-radius: 50%; animation: wave 1.8s infinite ease-in-out; top:0; left:0; z-index: -1; display: none; }
+        @keyframes wave { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+        .name { font-size: 16px; font-weight: 600; margin-top: 15px; color: #e2e8f0; }
+        .status { font-size: 11px; color: #00ff88; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+        .btn-action { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px; color: white; }
+        .call-btn { background: #00ff88; box-shadow: 0 4px 15px rgba(0,255,85,0.4); }
+        .hang-btn { background: #ff3b30; box-shadow: 0 4px 15px rgba(255,59,48,0.4); display: none; }
+        .back-btn { background: none; border: none; color: #7a96df; cursor: pointer; font-size: 12px; text-decoration: underline; }
+    </style>
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+</head>
+<body>
+
+    <div class="card">
+        <div style="text-align: center;">
+            <div class="avatar-area">
+                <div class="pulse" id="wave"></div>
+                <div class="avatar" id="avatar-letter">?</div>
+            </div>
+            <div class="name" id="user-name">Линия свободна</div>
+            <div class="status" id="call-status">VoIP Ara</div>
+        </div>
+        <div>
+            <button class="btn-action call-btn" id="c-btn" onclick="makeCall()">📞</button>
+            <button class="btn-action hang-btn" id="h-btn" onclick="endCall()">🛑</button>
+        </div>
+    </div>
+    
+    <button class="back-btn" onclick="goBack()">← Назад в контакты</button>
+
+    <script>
+        const holdMusic = new Audio("../MegaFon_-_Muzyka_ozhidaniya_otveta_operatora_polnaya_versiya_luchshe_kachestvo_(SkySound.cc).mp3");
+        holdMusic.loop = true;
+
+        firebase.initializeApp({
+            apiKey: "AIzaSyCMLXrYsLsczy6v48UoTznjlmA0DL9Vshs",
+            databaseURL: "https://firebaseio.com",
+            projectId: "echat-c5df4"
+        });
+        const db = firebase.database();
+
+        const myName = localStorage.getItem('weqip_myname') || "User";
+        const target = localStorage.getItem('weqip_target') || "Никто";
+
+        if(target !== "Никто") {
+            document.getElementById('user-name').innerText = target;
+            document.getElementById('avatar-letter').innerText = target.charAt(0);
+        }
+
+        function makeCall() {
+            if(target === "Никто") return alert("Сначала выберите друга!");
+            document.getElementById('c-btn').style.display = "none";
+            document.getElementById('h-btn').style.display = "flex";
+            document.getElementById('wave').style.display = "block";
+            document.getElementById('call-status').innerText = "Ожидание ответа...";
+            document.getElementById('call-status').style.color = "#00bfff";
+
+            holdMusic.play().catch(e => {
+                alert("Нажмите ок для старта гудков");
+                holdMusic.play();
+            });
+        }
+
+        function endCall() {
+            document.getElementById('c-btn').style.display = "flex";
+            document.getElementById('h-btn').style.display = "none";
+            document.getElementById('wave').style.display = "none";
+            document.getElementById('call-status').innerText = "Звонок завершен";
+            document.getElementById('call-status').style.color = "#00ff88";
+            holdMusic.pause();
+            holdMusic.currentTime = 0;
+        }
+
+        function goBack() {
+            holdMusic.pause();
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>
